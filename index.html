@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Header</h1>
+
+    <div id="canvas"></div>
+
+    <style>
+        #canvas {
+            background-color: #000;
+            width: 200px;
+            height: 200px;
+            border: 1px solid black;
+            margin: 100px;
+            padding: 0px;
+            position: static; /* fixed or static */
+            top: 100px;
+            left: 100px;
+        }
+    </style>
+
+<script type="module">
+    import * as THREE from './build/three.module.js';
+    import { GLTFLoader } from './examples/jsm/loaders/GLTFLoader.js';
+    import { AsciiEffect } from './examples/jsm/effects/AsciiEffect.js';
+    import { TrackballControls } from './examples/jsm/controls/TrackballControls.js';
+
+    let camera, controls, scene, renderer, effect;
+    let model;
+    const start = Date.now();
+
+    init();
+    animate();
+
+    function init() {
+
+        camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 2000 );
+        camera.position.y = 0;
+        camera.position.z = 6;
+
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color( 0, 0, 0 );
+
+        const pointLight1 = new THREE.PointLight( 0xffffff, 2.4  );
+        pointLight1.position.set( 40, 0, 40 );
+        scene.add( pointLight1 );
+
+        const pointLight2 = new THREE.PointLight( 0xffffff, 2.4 );
+        pointLight2.position.set( -60, 0, 40 );
+        scene.add( pointLight2 );
+
+
+        renderer = new THREE.WebGLRenderer();
+        renderer.setSize( 500, 500 );
+
+        effect = new AsciiEffect( renderer, ' .*^@', { invert: true } );
+        effect.setSize( window.innerWidth, window.innerHeight );
+        effect.domElement.style.color = 'limegreen';
+        effect.domElement.style.backgroundColor = 'black';
+
+        // Special case: append effect.domElement, instead of renderer.domElement.
+        // AsciiEffect creates a custom domElement (a div container) where the ASCII elements are placed.
+
+        document.body.appendChild( effect.domElement );
+
+        controls = new TrackballControls( camera, effect.domElement );
+
+        //
+
+        window.addEventListener( 'resize', onWindowResize );
+
+        const loader = new GLTFLoader();
+
+        loader.load( 'weirtz3D.glb', function ( gltf ) {
+        model = gltf.scene;
+        model.scale.set(1,1,1);
+        scene.add( model );
+
+        }, undefined, function ( error ) {
+
+        console.error( error );
+
+        } );
+
+    }
+
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        effect.setSize( window.innerWidth, window.innerHeight );
+    }
+
+
+    function animate() {
+
+        requestAnimationFrame( animate );
+        render();
+    }
+
+    function render() {
+
+        const timer = Date.now() - start;
+        model.rotation.y = timer * 0.001;
+        controls.update();
+        effect.render( scene, camera );
+
+    }
+
+</script>
+</body>
+</html>
